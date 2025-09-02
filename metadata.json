@@ -1,0 +1,5 @@
+{
+  "name": "Daily Update",
+  "description": "A personal app to track daily updates, manage tasks, and view history.",
+  "requestFramePermissions": []
+}
