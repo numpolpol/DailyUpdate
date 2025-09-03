@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import type { NewDailyLog, Task, TaskStatus } from '../types';
 import { TASK_STATUSES } from '../types';
@@ -5,13 +6,13 @@ import { Button } from './Button';
 import { SparklesIcon } from './icons/SparklesIcon';
 import { TrashIcon } from './icons/TrashIcon';
 
-interface DailyLogFormProps {
+interface MeetingEntryFormProps {
   onSave: (log: NewDailyLog) => Promise<void>;
   onSummarize: (tasks: Task[]) => Promise<string>;
   tasksFromYesterday: Task[];
 }
 
-export const DailyLogForm: React.FC<DailyLogFormProps> = ({ onSave, onSummarize, tasksFromYesterday }) => {
+export const MeetingEntryForm: React.FC<MeetingEntryFormProps> = ({ onSave, onSummarize, tasksFromYesterday }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskDesc, setNewTaskDesc] = useState('');
   const [yesterdayTasks, setYesterdayTasks] = useState<Task[]>(tasksFromYesterday);
@@ -22,7 +23,7 @@ export const DailyLogForm: React.FC<DailyLogFormProps> = ({ onSave, onSummarize,
 
   useEffect(() => {
     const unfinishedTasks = yesterdayTasks
-      .filter(task => task.status !== 'Done')
+      .filter(task => task.status !== 'Done' && task.status !== 'Cancel')
       .map(task => ({ ...task, status: 'In Progress' as TaskStatus }));
     setTasks(unfinishedTasks);
   }, [yesterdayTasks]);
@@ -38,14 +39,16 @@ export const DailyLogForm: React.FC<DailyLogFormProps> = ({ onSave, onSummarize,
 
   const handleAddTask = () => {
     if (newTaskDesc.trim() === '') return;
-    // Fix: Add the missing 'blockers' property to conform to the 'Task' type.
-    // FIX: Add the missing 'timeSpent' property to conform to the 'Task' type.
+    const newId = `task-${Date.now()}`;
     const newTask: Task = {
-      id: `task-${Date.now()}`,
+      id: newId,
+      persistentId: newId,
       description: newTaskDesc.trim(),
       status: 'In Progress',
       blockers: [],
       timeSpent: 0,
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: null,
     };
     setTasks(currentTasks => [...currentTasks, newTask]);
     setNewTaskDesc('');
@@ -63,7 +66,7 @@ export const DailyLogForm: React.FC<DailyLogFormProps> = ({ onSave, onSummarize,
       const result = await onSummarize(tasks);
       setSummary(result);
     } catch (err) {
-      setError('เกิดข้อผิดพลาดในการสรุปด้วย AI');
+      setError('Error generating AI summary.');
     } finally {
       setIsSummarizing(false);
     }
@@ -86,7 +89,7 @@ export const DailyLogForm: React.FC<DailyLogFormProps> = ({ onSave, onSummarize,
       setSummary('');
       setYesterdayTasks([]);
     } catch (err) {
-      setError('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+      setError('Error saving data.');
     } finally {
       setIsSaving(false);
     }
@@ -98,7 +101,7 @@ export const DailyLogForm: React.FC<DailyLogFormProps> = ({ onSave, onSummarize,
         {yesterdayTasks.length > 0 && (
           <section>
             <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">
-              อัปเดตงานของเมื่อวาน
+              Yesterday's Task Updates
             </h2>
             <div className="space-y-3">
               {yesterdayTasks.map(task => (
@@ -119,7 +122,7 @@ export const DailyLogForm: React.FC<DailyLogFormProps> = ({ onSave, onSummarize,
 
         <section>
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">
-            แผนงานสำหรับวันนี้
+            Today's Plan
           </h2>
           <div className="flex gap-3 mb-4">
             <input
@@ -127,11 +130,11 @@ export const DailyLogForm: React.FC<DailyLogFormProps> = ({ onSave, onSummarize,
               value={newTaskDesc}
               onChange={(e) => setNewTaskDesc(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTask())}
-              placeholder="เพิ่มงานใหม่..."
+              placeholder="Add a new task..."
               className="flex-grow p-3 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
             />
             <Button type="button" onClick={handleAddTask} variant="secondary">
-              เพิ่ม
+              Add
             </Button>
           </div>
           <div className="space-y-2">
@@ -143,7 +146,7 @@ export const DailyLogForm: React.FC<DailyLogFormProps> = ({ onSave, onSummarize,
                 </button>
               </div>
             ))}
-            {tasks.length === 0 && <p className="text-center text-sm text-slate-500 dark:text-slate-400 py-4">ยังไม่มีแผนงานสำหรับวันนี้</p>}
+            {tasks.length === 0 && <p className="text-center text-sm text-slate-500 dark:text-slate-400 py-4">No tasks planned for today yet.</p>}
           </div>
         </section>
 
@@ -151,7 +154,7 @@ export const DailyLogForm: React.FC<DailyLogFormProps> = ({ onSave, onSummarize,
            <div className="p-4 border-l-4 border-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-r-md">
             <h4 className="flex items-center font-semibold text-blue-800 dark:text-blue-300 mb-2">
               <SparklesIcon className="w-5 h-5 mr-2" />
-              สรุปโดย AI (ตัวอย่าง)
+              AI Summary (Preview)
             </h4>
             <p className="text-sm text-blue-700 dark:text-blue-200">{summary}</p>
           </div>
@@ -162,10 +165,10 @@ export const DailyLogForm: React.FC<DailyLogFormProps> = ({ onSave, onSummarize,
         <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-slate-200 dark:border-slate-700">
           <Button type="button" onClick={handleSummarizeClick} disabled={tasks.length === 0 || isSummarizing} isLoading={isSummarizing} variant="secondary">
             <SparklesIcon className="w-5 h-5 mr-2" />
-            สรุปด้วย AI
+            Summarize with AI
           </Button>
           <Button type="submit" disabled={isSaving || tasks.length === 0} isLoading={isSaving} variant="primary" className="sm:ml-auto">
-            บันทึกความคืบหน้า
+            Save Progress
           </Button>
         </div>
       </form>

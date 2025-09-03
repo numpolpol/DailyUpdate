@@ -1,5 +1,5 @@
 import React from 'react';
-import type { DailyLog } from '../types';
+import type { DailyLog, Blocker } from '../types';
 
 interface CommonBlockersProps {
   logs: DailyLog[];
@@ -11,7 +11,8 @@ export const CommonBlockers: React.FC<CommonBlockersProps> = ({ logs }) => {
   logs.forEach(log => {
     log.tasks.forEach(task => {
       (task.blockers || []).forEach(blocker => {
-        const cleanBlocker = blocker.trim();
+        const description = typeof blocker === 'string' ? blocker : (blocker as Blocker).description;
+        const cleanBlocker = description.trim();
         if (cleanBlocker) {
           blockerCounts[cleanBlocker] = (blockerCounts[cleanBlocker] || 0) + 1;
         }

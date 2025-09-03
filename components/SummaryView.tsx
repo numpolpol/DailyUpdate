@@ -1,10 +1,10 @@
 import React from 'react';
 import type { DailyLog } from '../types';
-import { Button } from './Button';
-import { SparklesIcon } from './icons/SparklesIcon';
 import { ActivityHeatmap } from './ActivityHeatmap';
 import { TaskTimeRanking } from './TaskTimeRanking';
 import { CommonBlockers } from './CommonBlockers';
+import { KeyMetrics } from './KeyMetrics';
+import { TaskStatusDistribution } from './TaskStatusDistribution';
 
 interface SummaryViewProps {
   logs: DailyLog[];
@@ -23,22 +23,28 @@ export const SummaryView: React.FC<SummaryViewProps> = ({ logs }) => {
   }
 
   return (
-    <div className="space-y-12">
-      <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-lg shadow-xl space-y-6">
-        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-          Productivity Heatmap
+    <div className="space-y-8">
+      <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-lg shadow-xl">
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6">
+          At a Glance
         </h2>
-        <p className="text-slate-600 dark:text-slate-400">
-          Daily completed tasks over the last 5 weeks. Darker shades indicate more completed tasks.
-        </p>
-        <ActivityHeatmap logs={logs} />
+        <KeyMetrics logs={logs} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
          <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-lg shadow-xl space-y-6">
             <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
-              Most Time-Consuming Tasks
+              Task Status Distribution
             </h2>
+            <TaskStatusDistribution logs={logs} />
+          </div>
+          <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-lg shadow-xl space-y-6">
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+              Longest Running Tasks
+            </h2>
+             <p className="text-sm text-slate-600 dark:text-slate-400 -mt-4">
+                Based on time from creation to completion.
+            </p>
             <TaskTimeRanking logs={logs} />
           </div>
           <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-lg shadow-xl space-y-6">
@@ -46,6 +52,15 @@ export const SummaryView: React.FC<SummaryViewProps> = ({ logs }) => {
               Frequent Blockers
             </h2>
             <CommonBlockers logs={logs} />
+          </div>
+           <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-lg shadow-xl space-y-6">
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
+              Productivity Heatmap
+            </h2>
+            <p className="text-slate-600 dark:text-slate-400 -mt-4">
+              Daily completed tasks over the last 5 weeks.
+            </p>
+            <ActivityHeatmap logs={logs} />
           </div>
       </div>
     </div>

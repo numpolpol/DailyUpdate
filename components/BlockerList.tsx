@@ -1,5 +1,6 @@
+
 import React from 'react';
-import type { DailyLog } from '../types';
+import type { DailyLog, Blocker } from '../types';
 import { BlockerIcon } from './icons/BlockerIcon';
 
 interface BlockedTask {
@@ -17,12 +18,20 @@ export const BlockerList: React.FC<BlockerListProps> = ({ logs }) => {
     .flatMap(log => 
       log.tasks.map(task => ({ ...task, logDate: log.date }))
     )
-    .filter(task => task.blockers && task.blockers.length > 0 && task.status !== 'Done')
+    .filter(task => 
+        (task.status !== 'Done' && task.status !== 'Cancel') &&
+        task.blockers &&
+        // Using a type guard for backward compatibility with string[]
+        task.blockers.some(b => typeof b === 'string' || !(b as Blocker).resolved)
+    )
     .map(task => ({
       logDate: task.logDate,
       taskDescription: task.description,
-      blockers: task.blockers,
+      blockers: (task.blockers as Array<Blocker | string>)
+        .filter(b => typeof b === 'string' || !(b as Blocker).resolved)
+        .map(b => typeof b === 'string' ? b : (b as Blocker).description),
     }))
+    .filter(task => task.blockers.length > 0) // Ensure there are unresolved blockers to show
     .sort((a, b) => new Date(b.logDate).getTime() - new Date(a.logDate).getTime());
 
   if (activeBlockers.length === 0) {
